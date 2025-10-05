@@ -7,12 +7,21 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/links', require('./routes/links'));
 app.use('/api/share', require('./routes/share'));
 
-const PORT = process.env.PORT || 8000;
+// Health check endpoint
+app.get('/health', (req, res) => res.status(200).json({ status: 'OK' }));
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
