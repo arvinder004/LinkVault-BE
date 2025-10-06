@@ -3,7 +3,7 @@ const router = express.Router();
 const protect = require('../middleware/auth');
 const ShareToken = require('../models/ShareToken');
 const Link = require('../models/Link');
-const crypto = require('crypto');  // For generating unique tokens
+const crypto = require('crypto');
 
 // Generate shareable link
 router.post('/generate', protect, async (req, res) => {
@@ -11,7 +11,7 @@ router.post('/generate', protect, async (req, res) => {
     const token = crypto.randomBytes(16).toString('hex');
     const newToken = new ShareToken({ user: req.user.id, token });
     await newToken.save();
-    const shareLink = `http://localhost:3000/shared/${token}`;  // Update with your domain
+    const shareLink = process.env.FRONTEND_URL + `/shared/${token}`; 
     res.json({ shareLink });
   } catch (err) {
     res.status(500).send('Server error');
