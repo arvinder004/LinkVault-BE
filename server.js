@@ -10,7 +10,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://linkvault-ald.netlify.app/",
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 
