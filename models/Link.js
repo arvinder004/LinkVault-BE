@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 
 const linkSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  url: { type: String, required: true },
   title: { type: String, required: true },
-  type: { type: String, enum: ['YouTube', 'Tweet', 'Article', 'Other'], default: 'Other' },
+  url: { type: String, required: true },
+  type: { type: String, enum: ['YouTube', 'Tweet', 'Article', 'Other'], required: true },
   description: { type: String },
-  createdAt: { type: Date, default: Date.now },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  tags: [{ type: String }], // Array of tags
+  folder: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', default: null }, // Reference to Folder
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Link', linkSchema);

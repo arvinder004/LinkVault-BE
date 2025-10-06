@@ -1,42 +1,57 @@
 const express = require('express');
 const router = express.Router();
-const protect = require('../middleware/auth');
+const auth = require('../middleware/auth');
 const Link = require('../models/Link');
+const Folder = require('../models/Folder');
 
-// Get all links for user
-router.get('/', protect, async (req, res) => {
+// Get all links for the authenticated user
+router.get('/', auth, async (req, res) => {
   try {
-    const links = await Link.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const links = await Link.find({ user: req.user.id }).populate('folder');
     res.json(links);
   } catch (err) {
-    console.log(err)
-    res.status(500).send('Server error');
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Add link
-router.post('/', protect, async (req, res) => {
-  const { url, title, type, description } = req.body;
+// Add a new link
+router.post('/', auth, async (req, res) => {
+  const { title, url, type, description, tags, folder } = req.body;
   try {
-    const newLink = new Link({ user: req.user.id, url, title, type, description });
-    await newLink.save();
-    res.json(newLink);
+    // Validate folder exists and belongs to user
+    if (folder) {
+      const folderExists = await Folder.findOne({ _id: folder, user: req.user.id });
+      if (!folderExists) return res.status(400).json({ message: 'Invalid folder' });
+    }
+    const newLink = new Link({
+      title,
+      url,
+      type,
+      description,
+      user: req.user.id,
+      tags: tags || [],
+      folder: folder || null
+    });
+    const link = await newLink.save();
+    await link.populate('folder');
+    res.json(link);
   } catch (err) {
-    console.error(err); // Add this line
-    res.status(500).send('Server error');
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Delete link
-router.delete('/:id', protect, async (req, res) => {
+// Delete a link
+router.delete('/:id', auth, async (req, res) => {
   try {
-    const link = await Link.findById(req.params.id);
-    if (!link || link.user.toString() !== req.user.id) return res.status(404).json({ msg: 'Link not found' });
-    await link.deleteOne({_id: link._id});
-    res.json({ msg: 'Link removed' });
+    const link = await Link.findOne({ _id: req.params.id, user: req.user.id });
+    if (!link) return res.status(404).json({ message: 'Link not found' });
+    await link.deleteOne();
+    res.json({ message: 'Link deleted' });
   } catch (err) {
-    console.log(err)
-    res.status(500).send('Server error');
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
